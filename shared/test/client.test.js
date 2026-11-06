@@ -231,3 +231,19 @@ test('deux appareils hors ligne puis reconnectés convergent sans perte', async 
     await server.close().catch(() => {});
   }
 });
+
+test('l’identifiant d’appareil reste stable d’une session à l’autre', async () => {
+  const storage = new MemoryStorage();
+  globalThis.window = { localStorage: storage, location: { protocol: 'http:', hostname: '127.0.0.1' } };
+  const first = await import('../src/sync/client.js?stable-1');
+  const second = await import('../src/sync/client.js?stable-2');
+  const a = first.createSyncSession({ getData: () => null });
+  const id1 = a.config.deviceId;
+  a.stop();
+  const b = second.createSyncSession({ getData: () => null });
+  const id2 = b.config.deviceId;
+  b.stop();
+  assert.ok(id1);
+  assert.equal(id1, id2, 'le serveur doit reconnaître le même appareil après un rechargement');
+  assert.ok(storage.getItem('mm-sync-config-v1'), 'la configuration est enregistrée au premier lancement');
+});

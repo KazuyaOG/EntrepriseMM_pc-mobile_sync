@@ -101,7 +101,11 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
   const storage = safeStorage();
   if (!storage) return OFFLINE_API;
 
+  // La configuration est créée puis enregistrée dès le premier lancement :
+  // l'identifiant de l'appareil reste stable d'une session à l'autre.
+  const storedConfig = readJson(storage, CONFIG_KEY);
   const config = readConfig(storage);
+  if (!storedConfig) saveConfig(storage, config);
   const listeners = new Set();
   let onApply = typeof apply === 'function' ? apply : null;
   let state = {
