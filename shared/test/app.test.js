@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initial, today } from '../../pc_desktop/src/data.js';
 import { planClients, clientDefaults } from '../../pc_desktop/src/recurrence.js';
-import { stampChanges, mergeData, stableStringify } from '../src/sync/merge.js';
+import { stampChanges, mergeData, createdSince, stableStringify } from '../src/sync/merge.js';
 
 const clone = value => structuredClone(value);
 
@@ -77,4 +77,30 @@ test('les données existantes sans horodatage restent utilisables telles quelles
   assert.equal(stableStringify(byId(merged.invoices)), stableStringify(byId(existing.invoices)));
   assert.equal(stableStringify(byId(merged.clients)), stableStringify(byId(existing.clients)));
   assert.deepEqual(merged.invoices.map(i => i.id), [1003, 1002, 1001]);
+});
+
+test('deux appareils qui planifient les mêmes rotations ne créent pas de doublons', () => {
+  const base = clone(initial);
+  base.clients.push(clientDefaults({
+    id: 900, name: 'Client récurrent', phone: '514', type: 'Résidentiel',
+    price: 120, rotation: 'monthly', startDate: '2026-11-20', service: 'Lavage de vitres'
+  }));
+  const shared = stampChanges(initial, planClients(base, '2026-11-06'), 1000);
+
+  // Chaque appareil planifie de son côté, sans se parler.
+  const pc = stampChanges(shared, planClients(clone(shared), '2026-11-10'), 2000);
+  const phone = stampChanges(shared, planClients(clone(shared), '2026-11-10'), 3000);
+  const merged = mergeData(pc, phone, {
+    localCreated: createdSince(shared, pc),
+    remoteCreated: createdSince(shared, phone),
+    now: 4000
+  });
+
+  const ids = merged.invoices.map(i => i.id);
+  assert.equal(new Set(ids).size, ids.length, 'aucun numéro de facture en double');
+  assert.ok(merged.appointments.every(a => merged.invoices.some(i => i.id === a.invoiceId)), 'chaque rendez-vous pointe une facture existante');
+  const keys = merged.appointments.map(a => a.recurrenceKey).filter(Boolean);
+  assert.equal(new Set(keys).size, keys.length, 'aucune visite planifiée deux fois');
+  const visits = merged.appointments.filter(a => a.clientId === 900);
+  assert.equal(new Set(visits.map(a => a.date)).size, visits.length, 'une seule visite par date');
 });

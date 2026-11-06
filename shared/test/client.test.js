@@ -147,3 +147,36 @@ test('les modifications faites hors ligne sont envoyées à la reconnexion', asy
 async function serverClose(server) {
   try { await server.close(); } catch { /* déjà fermé */ }
 }
+
+test('les données existantes sans horodatage arrivent au serveur au premier contact', async () => {
+  // Régression : la première poussée envoyait les données brutes (sans meta),
+  // et le serveur ignorait alors les informations d'entreprise.
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mm-client-first-'));
+  const server = await startSyncServer({ port: 0, dataDir });
+  const storage = new MemoryStorage();
+  const custom = structuredClone(initial);
+  custom.company.gst = '123456789RT0001';
+  custom.settings.taxFrequency = 'Annuelle';
+  custom.notes = 'Note déjà présente avant la synchronisation';
+  storage.setItem('mm-data-v1', JSON.stringify(custom));
+  storage.setItem('mm-sync-config-v1', JSON.stringify({
+    url: `ws://127.0.0.1:${server.port}/sync`, port: server.port, room: 'first', enabled: true, deviceId: 'pc', deviceName: 'PC'
+  }));
+  globalThis.window = { localStorage: storage, location: { protocol: 'http:', hostname: '127.0.0.1' } };
+
+  const { createSyncSession } = await import('../src/sync/client.js?first');
+  let data = custom;
+  const session = createSyncSession({ getData: () => data, apply: next => { data = next; }, isPristine: () => false });
+  try {
+    await waitFor(() => session.value().status === 'online', 'première synchronisation');
+    const response = await fetch(`http://127.0.0.1:${server.port}/sync/state?room=first`);
+    const body = await response.json();
+    assert.equal(body.data.company.gst, '123456789RT0001', 'le numéro de TPS est publié');
+    assert.equal(body.data.settings.taxFrequency, 'Annuelle');
+    assert.equal(body.data.notes, 'Note déjà présente avant la synchronisation');
+    assert.ok(body.data.meta.company > 0, 'le champ est horodaté au premier envoi');
+  } finally {
+    session.stop();
+    await server.close();
+  }
+});

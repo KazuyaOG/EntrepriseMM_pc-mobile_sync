@@ -128,6 +128,7 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
   let burst = 0;
   let applying = false;
   let lastLocal = typeof getData === 'function' ? getData() : null;
+  let lastSentSignature = '';
 
   const emit = () => { for (const listener of listeners) listener(state); };
   const setState = patch => {
@@ -173,22 +174,18 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
   /** Toutes les écritures locales passent ici : horodatage + file d'attente. */
   function commit(next) {
     if (applying) { lastLocal = next; return next; }
-    const stamped = stampChanges(lastLocal || next, next, Date.now());
-    lastLocal = stamped;
-    if (stamped !== next || typeof next === 'object') {
-      dirty = true;
-      queueOutbox(stamped);
-      scheduleFlush();
+    const previous = lastLocal;
+    const stamped = stampChanges(previous, next, Date.now());
+    if (stamped === previous) {
+      // Contenu identique : aucune écriture, aucun envoi, aucune boucle.
+      lastLocal = next;
+      return next;
     }
-    return stamped;
-  }
-
-  function restoreLocal() {
-    const pending = readOutbox().data;
-    if (!pending) return null;
-    lastLocal = pending;
+    lastLocal = stamped;
     dirty = true;
-    return pending;
+    queueOutbox(stamped);
+    scheduleFlush();
+    return stamped;
   }
 
   let flushTimer = null;
@@ -207,15 +204,23 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
   function flush() {
     if (!socket || socket.readyState !== 1 || inFlight) return;
     if (!lastSend) lastSend = 0;
-    const local = currentData();
+    let local = currentData();
     if (!local) return;
     // Sans base connue, c'est le premier échange : on envoie tout, le serveur
     // fusionne et renvoie l'état commun qui deviendra la base.
     const sessionBase = readBase();
+    if (!lastSentSignature) {
+      // Données existantes jamais synchronisées : elles n'ont pas d'horodatage.
+      // On les estampille pour que le serveur puisse arbitrer entre deux
+      // versions (sinon l'entreprise et les réglages seraient ignorés).
+      local = stampChanges({}, local, Date.now());
+      lastLocal = local;
+    }
     inFlight = true;
     lastSend = Date.now();
     burst += 1;
     try {
+      lastSentSignature = fingerprint(local);
       socket.send(JSON.stringify({
         type: 'push',
         room: config.room,
@@ -467,18 +472,24 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
       next.room = normalizeRoom(next.room);
       next.deviceName = normalizeDeviceName(next.deviceName);
       if (!next.deviceId) next.deviceId = randomId();
-      const enabledChanged = next.enabled !== config.enabled || next.url !== config.url || next.room !== config.room;
+      const enabledChanged = Boolean(next.enabled) !== Boolean(config.enabled);
+      const targetChanged = next.url !== config.url || next.room !== config.room;
       persistConfig(next);
-      if (enabledChanged) {
+      if (targetChanged) {
+        // Nouvelle cible : la base connue ne vaut plus rien, mais les
+        // modifications locales en attente sont conservées et renvoyées.
         writeBase(null);
-        clearOutbox();
         dirty = true;
-        attempt = 0;
       }
-      if (config.enabled) {
-        closedByUser = false;
-        connect();
-      } else {
+      if (enabledChanged || targetChanged) {
+        attempt = 0;
+        if (config.enabled) {
+          closedByUser = false;
+          connect();
+        } else {
+          stop();
+        }
+      } else if (!config.enabled) {
         stop();
       }
       return { ...config };
@@ -498,11 +509,10 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
         connect();
         return;
       }
-      writeBase(null);
+      // Le serveur renvoie son état complet ; la fusion rattrape tout écart.
       sendHello();
     },
     commit,
-    restoreLocal,
     stop,
     apply(handler) { onApply = typeof handler === 'function' ? handler : onApply; },
     setPristineCheck(fn) { if (typeof fn === 'function') isPristine = fn; },
