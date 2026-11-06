@@ -180,3 +180,54 @@ test('les données existantes sans horodatage arrivent au serveur au premier con
     await server.close();
   }
 });
+
+test('deux appareils hors ligne puis reconnectés convergent sans perte', async () => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mm-client-resilience-'));
+  const port = 0;
+  let server = await startSyncServer({ port, dataDir });
+  const realPort = server.port;
+  const url = `ws://127.0.0.1:${realPort}/sync`;
+
+  const make = async (id, suffix) => {
+    const storage = new MemoryStorage();
+    storage.setItem('mm-sync-config-v1', JSON.stringify({ url, port: realPort, room: 'resilience', enabled: true, deviceId: id, deviceName: id }));
+    const previous = globalThis.window;
+    globalThis.window = { localStorage: storage, location: { protocol: 'http:', hostname: '127.0.0.1' } };
+    // Le module lit la configuration à l'import : window doit déjà pointer sur
+    // le stockage de CET appareil, et rester en place pendant toute la session.
+    const { createSyncSession } = await import(`../src/sync/client.js?${suffix}`);
+    let data = structuredClone(initial);
+    const app = { storage, get data() { return data; }, replace: next => { data = next; } };
+    app.session = createSyncSession({ getData: () => data, apply: next => { data = next; }, isPristine: () => true });
+    return app;
+  };
+
+  const pc = await make('pc', 'res-pc');
+  const phone = await make('phone', 'res-phone');
+  try {
+    await waitFor(() => pc.session.value().status === 'online' && phone.session.value().status === 'online', 'première synchronisation des deux appareils');
+
+    // Panne : le serveur s'arrête, les deux appareils continuent de travailler.
+    await server.close();
+    await waitFor(() => ['offline', 'connecting', 'syncing'].includes(pc.session.value().status), 'le PC passe hors ligne');
+
+    pc.replace({ ...pc.data, reminders: [...pc.data.reminders, { id: 'pc-offline', text: 'Écrit sur le PC hors ligne', date: '2026-11-20', done: false }] });
+    pc.replace(pc.session.commit(pc.data));
+    phone.replace({ ...phone.data, reminders: [...phone.data.reminders, { id: 'phone-offline', text: 'Écrit sur le téléphone hors ligne', date: '2026-11-21', done: false }] });
+    phone.replace(phone.session.commit(phone.data));
+
+    // Retour du serveur sur le même port : reconnexion automatique.
+    server = await startSyncServer({ port: realPort, dataDir });
+    await waitFor(() => pc.session.value().status === 'online' && phone.session.value().status === 'online', 'reconnexion des deux appareils', 20000);
+    await waitFor(
+      () => pc.data.reminders?.some(r => r.id === 'phone-offline') && phone.data.reminders?.some(r => r.id === 'pc-offline'),
+      'les deux modifications hors ligne se rejoignent',
+      15000
+    );
+    assert.equal(fingerprint(pc.data), fingerprint(phone.data), 'les deux appareils convergent');
+  } finally {
+    pc.session.stop();
+    phone.session.stop();
+    await server.close().catch(() => {});
+  }
+});

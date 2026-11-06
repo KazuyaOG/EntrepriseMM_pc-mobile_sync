@@ -78,12 +78,10 @@ const OFFLINE_API = {
   config: defaultConfig(),
   saveConfig: () => OFFLINE_API.config,
   commit: next => next,
-  restoreLocal: () => null,
   stop: () => {},
   connect: () => {},
   disconnect: () => {},
   syncNow: () => {},
-  noteLocalChange: () => {},
   apply: () => {},
   value: () => ({ status: 'off', label: 'Synchronisation indisponible (stockage bloqué)', peers: 0 }),
   subscribe: listener => { listener(OFFLINE_API.value()); return () => {}; }
@@ -517,20 +515,13 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
     commit,
     stop,
     apply(handler) { onApply = typeof handler === 'function' ? handler : onApply; },
-    setPristineCheck(fn) { if (typeof fn === 'function') isPristine = fn; },
     value: () => state,
     subscribe(listener) {
       listeners.add(listener);
       listener(state);
       return () => listeners.delete(listener);
     },
-    noteLocalChange(data) {
-      if (applying) return;
-      if (data) lastLocal = data;
-      dirty = true;
-      if (socket && socket.readyState === 1) scheduleFlush();
-    },
-    /** Utilisé par l'application pour savoir si un envoi est en attente. */
+    /** Vrai si une modification attend encore d'être confirmée par le serveur. */
     hasPendingChanges: () => Boolean(readOutbox().data)
   };
 
