@@ -61,6 +61,53 @@ export function fingerprint(data) {
   return text.length + ':' + (hash >>> 0).toString(36);
 }
 
+const normalizeText = value => String(value || '').normalize('NFC');
+
+/**
+ * Reconnaît les enregistrements du jeu de démonstration livré avec
+ * l'application. Sert à prévenir l'utilisateur avant de synchroniser des
+ * données fictives avec de vraies données.
+ */
+const DEMO_MARKERS = {
+  clients: ['Sophie Tremblay', 'Jean-François Gagnon', 'Isabelle Roy', 'Pierre et Louise Bouchard'],
+  clientsByPhone: ['4504780132', '4504780264', '4504780385', '4504780416'],
+  invoices: ['MM-1001', 'MM-1002', 'MM-1003'],
+  reminders: ['Relances du printemps', 'Relances de l’automne', 'Recontacter Pierre et Louise'],
+  vendors: ['Quincaillerie du quartier']
+};
+
+export function isDemoData(raw) {
+  if (!isObject(raw)) return false;
+  const counted = [];
+  const names = (raw.clients || []).map(client => normalizeText(client?.name));
+  const hits = DEMO_MARKERS.clients.filter(name => names.includes(normalizeText(name))).length;
+  counted.push(hits >= 2);
+  const phones = (raw.clients || []).map(client => String(client?.phone || '').replace(/\D/g, ''));
+  counted.push(DEMO_MARKERS.clientsByPhone.filter(phone => phones.includes(phone)).length >= 2);
+  const reminderTexts = (raw.reminders || []).map(item => normalizeText(item?.text));
+  counted.push(DEMO_MARKERS.reminders.some(text => reminderTexts.some(value => value.startsWith(normalizeText(text)))));
+  const vendors = (raw.expenses || []).map(item => normalizeText(item?.vendor));
+  counted.push(DEMO_MARKERS.vendors.some(name => vendors.includes(normalizeText(name))));
+  return counted.filter(Boolean).length >= 2;
+}
+
+/** Copie vide ne conservant que la fiche d'entreprise et les réglages. */
+export function blankData(raw) {
+  const source = isObject(raw) ? raw : {};
+  return {
+    company: isObject(source.company) ? { ...source.company } : {},
+    clients: [],
+    invoices: [],
+    appointments: [],
+    expenses: [],
+    reminders: [],
+    notes: '',
+    settings: isObject(source.settings) ? { ...source.settings } : { tips: true, taxFrequency: 'Trimestrielle' },
+    meta: {},
+    tombstones: {}
+  };
+}
+
 /** Copie normalisée : collections en tableaux, champs attendus présents. */
 export function normalize(raw) {
   const source = isObject(raw) ? raw : {};

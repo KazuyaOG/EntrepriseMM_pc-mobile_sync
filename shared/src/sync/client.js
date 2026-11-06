@@ -1,4 +1,4 @@
-import { mergeData, stampChanges, fingerprint, createdSince } from './merge.js';
+import { mergeData, stampChanges, fingerprint, createdSince, blankData } from './merge.js';
 import {
   PROTOCOL_VERSION,
   DEFAULT_PORT,
@@ -82,6 +82,8 @@ const OFFLINE_API = {
   connect: () => {},
   disconnect: () => {},
   syncNow: () => {},
+  getData: () => null,
+  resetToBlank: () => null,
   apply: () => {},
   value: () => ({ status: 'off', label: 'Synchronisation indisponible (stockage bloqué)', peers: 0 }),
   subscribe: listener => { listener(OFFLINE_API.value()); return () => {}; }
@@ -514,6 +516,17 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
     },
     commit,
     stop,
+    /** État courant (lecture seule) : utilisé par le panneau de réglages. */
+    getData: () => currentData(),
+    /** Remplace tout le contenu par la fiche d'entreprise seule (données d'exemple). */
+    resetToBlank() {
+      const next = stampChanges(currentData() || {}, blankData(currentData()), Date.now() + 1);
+      applyToApp(next);
+      dirty = true;
+      queueOutbox(next);
+      scheduleFlush();
+      return next;
+    },
     apply(handler) { onApply = typeof handler === 'function' ? handler : onApply; },
     value: () => state,
     subscribe(listener) {

@@ -49,3 +49,8 @@
 .sync-host b{font-weight:600}
 .sync-host p{margin:3px 0 0;font-size:11.5px}
 .sync-host code{background:#ffffff9c;border:1px solid #d9e4d7;border-radius:5px;padding:1px 6px;font-size:11px;margin-right:6px;cursor:pointer}
+.sync-demo{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px 15px;border-radius:9px;background:#fbf6e8;border:1px solid #e9dbb5;color:#80632e;margin-bottom:15px;flex-wrap:wrap}
+.sync-demo b{font-size:12.5px;display:block;margin-bottom:3px}
+.sync-demo p{font-size:11.5px;line-height:1.6;margin:0}
+.sync-demo button{flex-shrink:0;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+@media(max-width:640px){.sync-demo{flex-direction:column;align-items:stretch}}

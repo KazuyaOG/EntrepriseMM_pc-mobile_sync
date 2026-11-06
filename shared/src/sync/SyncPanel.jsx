@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   RefreshCw, Wifi, WifiOff, Smartphone, Monitor, CheckCircle2, AlertCircle,
-  Server, Copy, Link2, RadioTower, ShieldCheck
+  Server, Copy, Link2, RadioTower, ShieldCheck, Eraser
 } from 'lucide-react';
 import { normalizeServerUrl, DEFAULT_PORT, isLoopbackUrl } from './protocol.js';
+import { isDemoData } from './merge.js';
 import './sync.css';
 
 const dateTime = value => (value ? new Date(value).toLocaleString('fr-CA', { dateStyle: 'short', timeStyle: 'short' }) : 'jamais');
@@ -36,6 +37,7 @@ export default function SyncPanel({ session, notify, compact = false }) {
   const [saved, setSaved] = useState('');
   const [copied, setCopied] = useState('');
   const [host, setHost] = useState(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => session.subscribe(setStatus), [session]);
   useEffect(() => {
@@ -43,6 +45,11 @@ export default function SyncPanel({ session, notify, compact = false }) {
     window.mmDesktop?.syncInfo?.().then(info => { if (alive) setHost(info); }).catch(() => {});
     return () => { alive = false; };
   }, []);
+  useEffect(() => {
+    setDemo(isDemoData(session.getData?.()));
+    const timer = setInterval(() => setDemo(isDemoData(session.getData?.())), 4000);
+    return () => clearInterval(timer);
+  }, [session]);
 
   const view = STATUS[status.status] || STATUS.off;
   const Icon = view.icon;
@@ -153,6 +160,19 @@ export default function SyncPanel({ session, notify, compact = false }) {
         </button>
       </div>
     </form>
+
+    {demo && <div className="sync-demo">
+      <div>
+        <b>Données de démonstration détectées</b>
+        <p>Les clients, factures et rendez-vous d’exemple sont encore présents. Ils seront synchronisés avec le PC comme de vraies données.</p>
+      </div>
+      <button className="secondary" type="button" onClick={() => {
+        if (!window.confirm('Remplacer toutes les données par la fiche d’entreprise seulement? Les clients, factures, rendez-vous, dépenses et rappels d’exemple seront supprimés. Action définitive.')) return;
+        session.resetToBlank?.();
+        setDemo(false);
+        notify?.('Données de démonstration effacées. La fiche d’entreprise est conservée.');
+      }}><Eraser size={16} />Effacer les exemples</button>
+    </div>}
 
     {!compact && <div className="sync-help">
       <h4><Server size={16} />Comment relier le PC et le téléphone</h4>

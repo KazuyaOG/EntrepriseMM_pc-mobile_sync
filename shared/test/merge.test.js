@@ -6,7 +6,8 @@ import {
   createdSince,
   fingerprint,
   stableStringify,
-  normalize
+  normalize,
+  blankData
 } from '../src/sync/merge.js';
 
 const base = () => ({
@@ -183,4 +184,41 @@ test('trois appareils convergent vers le même état', () => {
   assert.equal(b.clients.find(x => x.id === 2).phone, '777');
   assert.equal(b.reminders.length, 2);
   assert.equal(b.expenses.length, 2);
+});
+
+test('les données de démonstration sont reconnues, les vraies non', async () => {
+  const { isDemoData } = await import('../src/sync/merge.js');
+  const { initial } = await import('../../pc_desktop/src/data.js');
+  assert.equal(isDemoData(initial), true);
+
+  const real = structuredClone(initial);
+  real.clients = [{ id: 1, name: 'Client réel', phone: '514 555-0101', type: 'Résidentiel' }];
+  real.reminders = [];
+  real.expenses = [];
+  assert.equal(isDemoData(real), false, 'des données réelles ne déclenchent pas l’avertissement');
+
+  const empty = blankData(initial);
+  assert.equal(empty.clients.length, 0);
+  assert.equal(empty.invoices.length, 0);
+  assert.equal(empty.company.name, initial.company.name, 'la fiche d’entreprise est conservée');
+  assert.equal(isDemoData(empty), false);
+});
+
+test('effacer les exemples supprime les fiches mais garde l’entreprise', async () => {
+  const { initial } = await import('../../pc_desktop/src/data.js');
+  // Aucune modification : stampChanges renvoie l'état tel quel (pas de meta).
+  const before = initial;
+  const cleared = stampChanges(before, blankData(before), 2000);
+  assert.equal(cleared.clients.length, 0);
+  assert.equal(cleared.invoices.length, 0);
+  assert.equal(cleared.company.name, initial.company.name);
+  // Les suppressions sont mémorisées : un autre appareil les appliquera.
+  assert.ok(cleared.tombstones['clients|1']);
+  // La fiche d'entreprise n'a pas changé : elle n'est pas réhorodatée.
+  assert.equal(cleared.meta.company, undefined);
+
+  // Même une vieille copie ne ressuscite pas les fiches effacées.
+  const merged = mergeData(cleared, before, { now: 3000 });
+  assert.equal(merged.clients.length, 0);
+  assert.equal(merged.company.name, initial.company.name);
 });
