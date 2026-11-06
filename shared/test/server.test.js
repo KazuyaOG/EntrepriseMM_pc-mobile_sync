@@ -177,3 +177,65 @@ test('le serveur ignore les messages malformés sans tomber', async () => {
   client.close();
   await server.close();
 });
+
+test('le serveur résiste aux trames invalides et à la traversée de dossier', async () => {
+  const dataDir = await tmp();
+  const staticDir = await tmp();
+  await fs.writeFile(path.join(staticDir, 'index.html'), '<!doctype html><title>Gestion MM</title>');
+  const server = await startSyncServer({ port: 0, dataDir, staticDir });
+  const client = await connect(`ws://127.0.0.1:${server.port}/sync`, 'robuste');
+  try {
+    for (const payload of ['pas du json', '{}', '{"type":123}', '{"type":"inconnu"}', 'null', '[]']) client.ws.send(payload);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Le serveur répond toujours.
+    const health = await (await fetch(`http://127.0.0.1:${server.port}/health`)).json();
+    assert.equal(health.ok, true);
+
+    // Une version de protocole inconnue est refusée clairement.
+    client.send({ type: 'hello', protocol: 99, room: 'x' });
+    const welcome = await client.next(message => message.type === 'welcome');
+    assert.equal(welcome.compatible, false);
+
+    // Aucun fichier hors du dossier de l'application n'est servi : les chemins
+    // remontants sont refusés ou retombent sur index.html.
+    await fs.writeFile(path.join(dataDir, 'secret.txt'), 'confidentiel');
+    for (const attempt of ['/../secret.txt', '/..%2fsecret.txt', '/%2e%2e/secret.txt', '/../../etc/passwd']) {
+      const response = await fetch(`http://127.0.0.1:${server.port}${attempt}`);
+      const body = await response.text();
+      assert.ok(!body.includes('confidentiel'), `${attempt} ne doit pas exposer le dossier de données`);
+      assert.ok(!body.includes('root:'), `${attempt} ne doit pas exposer le système`);
+      if (response.status === 200) assert.match(body, /Gestion MM/, 'seule l’application est servie');
+    }
+  } finally {
+    client.close();
+    await server.close();
+  }
+});
+
+test('huit appareils peuvent travailler ensemble', async () => {
+  const dataDir = await tmp();
+  const server = await startSyncServer({ port: 0, dataDir });
+  const clients = [];
+  try {
+    for (let i = 0; i < 8; i++) {
+      const client = await connect(`ws://127.0.0.1:${server.port}/sync`, 'appareil-' + i);
+      client.send({ type: 'hello', protocol: 1, room: 'foule', deviceId: 'd' + i, deviceName: 'Appareil ' + i });
+      await client.next(message => message.type === 'welcome');
+      clients.push(client);
+    }
+    const health = await (await fetch(`http://127.0.0.1:${server.port}/health`)).json();
+    assert.equal(health.peers, 8);
+
+    // Une écriture d'un appareil se diffuse aux autres.
+    const source = clients[0];
+    const data = stampChanges(initial, { ...structuredClone(initial), notes: 'Vu par tous' }, 1000);
+    const witnessed = clients[7].next(message => message.type === 'state' && message.data?.notes === 'Vu par tous');
+    source.send({ type: 'push', room: 'foule', data, created: createdSince(initial, data) });
+    const received = await witnessed;
+    assert.equal(received.data.notes, 'Vu par tous');
+  } finally {
+    for (const client of clients) client.close();
+    await server.close();
+  }
+});
