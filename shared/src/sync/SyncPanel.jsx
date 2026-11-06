@@ -33,6 +33,8 @@ export default function SyncPanel({ session, notify, compact = false }) {
   const [room, setRoom] = useState(config.room || 'gestion-mm');
   const [deviceName, setDeviceName] = useState(config.deviceName || '');
   const [enabled, setEnabled] = useState(Boolean(config.enabled));
+  // Le commutateur suit la configuration réellement enregistrée.
+  useEffect(() => { setEnabled(Boolean(session.config.enabled)); }, [session, status.status]);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const [copied, setCopied] = useState('');

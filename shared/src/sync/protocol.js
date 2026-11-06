@@ -15,6 +15,22 @@ export const RECONNECT_MAX_MS = 15000;
 export const isNativeShell = () => typeof window !== 'undefined' && Boolean(window.mmNative?.isNative);
 export const isDesktopShell = () => typeof window !== 'undefined' && Boolean(window.mmDesktop?.isDesktop);
 
+/**
+ * Faut-il tenter la synchronisation dès le premier lancement ?
+ * Oui quand l'application est servie par le PC lui-même (adresse réseau ou
+ * application Windows) : le serveur est alors juste à côté. Dans un simple
+ * « npm run dev » sur localhost, non : le bandeau « hors ligne » serait
+ * trompeur tant que le serveur n'est pas lancé. L'utilisateur peut l'activer
+ * d'un clic dans Réglages → Synchronisation.
+ */
+export function shouldAutoSync() {
+  if (typeof window === 'undefined') return false;
+  if (isNativeShell() || isDesktopShell()) return true;
+  const { protocol, hostname } = window.location || {};
+  if (!/^https?:$/.test(protocol || '')) return false;
+  return !['localhost', '127.0.0.1', '[::1]', ''].includes(hostname || '');
+}
+
 /** Nom d'appareil proposé par défaut. */
 export function defaultDeviceName() {
   if (typeof window === 'undefined') return 'Appareil';
