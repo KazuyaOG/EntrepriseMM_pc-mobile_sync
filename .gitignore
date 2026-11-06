@@ -1,0 +1,15 @@
+# Dépendances et compilations (générées localement)
+node_modules/
+dist/
+release/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+
+# État du serveur de synchronisation (données réelles, jamais versionnées)
+sync-data/
+mm-sync-data/
+.arena*/
+scratch/
+uitest/

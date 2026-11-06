@@ -1,0 +1,30 @@
+{
+  "name": "gestion-mm-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synchronisation PC ↔ mobile pour Gestion MM (moteur de fusion, protocole et serveur local).",
+  "type": "module",
+  "main": "server/server.js",
+  "bin": {
+    "mm-sync": "server/cli.js"
+  },
+  "exports": {
+    ".": "./server/server.js",
+    "./merge": "./src/sync/merge.js",
+    "./protocol": "./src/sync/protocol.js",
+    "./client": "./src/sync/client.js"
+  },
+  "scripts": {
+    "start": "node server/cli.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "jsdom": "^31.0.0"
+  }
+}

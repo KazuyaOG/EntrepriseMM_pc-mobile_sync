@@ -1,0 +1,66 @@
+/* Section identities: restrained color cues, structural separation and strong headings. */
+.workspace{--section:#3e7259;--section-soft:#edf4ee;--section-line:#d5e4d8;--section-ink:#2b513c;background:#f6f8f4}
+.workspace[data-page=calendar]{--section:#3d795f;--section-soft:#eaf3ed;--section-line:#cfe2d5;--section-ink:#2b5842}
+.workspace[data-page=invoices]{--section:#477b88;--section-soft:#eaf3f5;--section-line:#cfe1e5;--section-ink:#315c67}
+.workspace[data-page=clients]{--section:#687c4a;--section-soft:#f0f4e7;--section-line:#dce5cb;--section-ink:#4c5f35}
+.workspace[data-page=reminders]{--section:#a17b3f;--section-soft:#faf3e5;--section-line:#ebddc4;--section-ink:#7a5c2d}
+.workspace[data-page=company]{--section:#617b87;--section-soft:#edf2f5;--section-line:#d5e1e7;--section-ink:#435f6c}
+.workspace[data-page=expenses]{--section:#a77753;--section-soft:#f9f0e8;--section-line:#ecdacb;--section-ink:#805636}
+.workspace[data-page=taxes]{--section:#777099;--section-soft:#f1eef7;--section-line:#dfd9ed;--section-ink:#5b537b}
+.workspace[data-page=tools]{--section:#4b8884;--section-soft:#eaf5f2;--section-line:#cee5df;--section-ink:#356864}
+.workspace .content{padding-top:30px}
+.workspace .page-head{position:relative;background:linear-gradient(115deg,var(--section-soft),#ffffffc9 85%);border:1px solid var(--section-line);border-left:4px solid var(--section);border-radius:12px;padding:25px 27px;margin-bottom:28px;min-height:139px}
+.workspace .page-head .eyebrow{color:var(--section);font-size:10px;font-weight:650;letter-spacing:1.5px}
+.workspace .page-head h1{color:var(--section-ink);font-size:32px;font-weight:650;margin-top:10px}
+.workspace .page-head p{color:#677868;font-size:13px}
+.workspace .app-top{background:#fff;border-bottom:1px solid var(--section-line);box-shadow:0 2px 8px #273d3003}
+.workspace .app-top>span{font-weight:600;color:#435548}
+.workspace .app-top .crumb{font-weight:500;color:var(--section);background:var(--section-soft);padding:7px 11px;border-radius:6px}
+.workspace .panel{border-color:#dde4d8;box-shadow:0 3px 12px #2a433505}
+.workspace .panel>.panel-bar{background:#fcfdfb;border-bottom:1px solid #e7ece2;padding-block:20px}
+.workspace .panel-bar h3{font-size:16px;font-weight:650;color:#354d3e}
+.workspace .padded>.panel-bar{background:none;padding:0 0 18px;margin-bottom:18px;border-bottom:1px solid var(--section-line)}
+.workspace .panel-bar h3>svg{background:var(--section-soft);color:var(--section);border-radius:7px;padding:6px;width:32px;height:32px;flex-shrink:0}
+.workspace .count{color:var(--section);background:var(--section-soft);border:1px solid var(--section-line)}
+.workspace .panel table thead th{background:var(--section-soft);color:var(--section-ink);font-weight:600;letter-spacing:.75px;border-color:var(--section-line)}
+.workspace .field>span{color:#52674c;font-weight:600}
+.workspace .field input,.workspace .field select,.workspace .field textarea{background:#fff;border-color:#d7dfd0}
+.workspace .field input:focus,.workspace .field select:focus,.workspace .field textarea:focus{border-color:var(--section);box-shadow:0 0 0 3px var(--section-soft)}
+.workspace .secondary{border-color:var(--section-line);color:var(--section-ink)}
+.workspace .secondary:hover{background:var(--section-soft)}
+.workspace .standalone{background:#fff;border:1px solid var(--section-line);border-radius:10px;padding:17px 20px;margin-bottom:20px}
+.workspace .stat{position:relative;border-top:3px solid var(--section);box-shadow:0 3px 10px #304b3604}
+.workspace .stat:nth-child(1){border-top-color:#7c9b66}.workspace .stat:nth-child(2){border-top-color:#d0a356}.workspace .stat:nth-child(3){border-top-color:#c5826e}
+.workspace .stat>span{color:#64745a;font-size:12px}.workspace .stat small{color:#7c8971}
+.workspace .calendar-reports{border-top:3px solid var(--section);background:linear-gradient(180deg,#fff,var(--section-soft));margin-bottom:28px}
+.workspace .calendar-toolbar{border-top:3px solid var(--section);background:#fcfdfb}
+.workspace .view-tabs{margin-top:5px}.workspace .view-tabs .selected{color:var(--section-ink);font-weight:600}
+.workspace .weekdays{background:var(--section-soft);border-color:var(--section-line)}
+.workspace .weekdays span{color:var(--section-ink);font-weight:600}
+.workspace .agenda{border:1px solid var(--section-line);border-radius:12px;padding:19px;background:#eef3e9}
+.workspace .agenda-title{padding-top:2px;border-color:#d7e2cf}
+.workspace .agenda-title .eyebrow{color:#617a50;font-weight:650}
+.workspace .agenda-item{box-shadow:0 2px 8px #344e2f04;border-color:#dbe5d3}
+.workspace .agenda-item h3{color:#365139}.workspace .agenda-item p{color:#73856a}
+.workspace .appointment-time{display:inline-block;background:#edf4e6;color:#587448;padding:5px 8px;border-radius:5px;font-weight:600}
+.workspace .client-tile{border-top:3px solid #a4b88c;box-shadow:0 3px 12px #30482c04;transition:transform .2s,border-color .2s}
+.workspace .client-tile:nth-child(3n+2){border-top-color:#c1b299}.workspace .client-tile:nth-child(3n){border-top-color:#8eb2a5}
+.workspace .client-tile h3{font-size:16px;color:#405537}
+.workspace .two-columns>.panel{border-top:3px solid var(--section)}
+.workspace .two-columns>.note-panel{border-top-color:#c4b276;background:#faf8ed}
+.workspace .note-panel h3{color:#75633c}.workspace .note-panel>svg{color:#9a8651}
+.workspace .note-panel textarea{color:#6a624d;background:repeating-linear-gradient(transparent,transparent 25px,#d9cfa535 26px);line-height:26px;min-height:260px}
+.workspace .reminder{padding:20px 12px;border-radius:6px;margin-top:5px}.workspace .reminder:nth-child(even){background:#fafbf6}.workspace .reminder small{color:#8a886d}
+.workspace .company-form{border-top:3px solid var(--section)}
+.workspace .section-heading{padding-bottom:22px;border-color:var(--section-line)}
+.workspace .section-heading>svg{color:var(--section);background:var(--section-soft);padding:10px;width:46px;height:46px;border-radius:11px}
+.workspace .section-heading p{color:#7c8b84}
+.workspace .expense-report-controls{border-top:3px solid var(--section);background:linear-gradient(180deg,#fff,#fcf8f3);margin-bottom:28px}
+.workspace .expense-form{border:1px solid var(--section-line);border-left:4px solid var(--section);background:#fffcf8;padding:26px}
+.workspace .report-actions{padding:16px;background:#ffffffb0;border:1px solid var(--section-line);border-radius:8px}
+.workspace .expense-report-controls>.muted{display:block;padding:6px 2px 0;color:#8b735d}
+.workspace .tax-card{border-top:3px solid var(--section)!important}.workspace .tax-card h2{color:var(--section-ink)}
+.workspace .tax-net{background:var(--section-soft);margin:6px -25px -25px;padding:23px 25px;color:var(--section-ink)}
+.workspace .period-select{background:#fff;border:1px solid var(--section-line);padding:20px;border-radius:10px;margin-bottom:24px}.workspace .period-select .field{margin-bottom:0}
+.workspace .tools-bottom>.panel{min-height:350px}.workspace .tools-bottom>.panel>svg:first-child{color:var(--section);background:var(--section-soft);padding:9px;width:44px;height:44px;border-radius:10px}
+@media(max-width:760px){.workspace .content{padding-top:22px}.workspace .page-head{padding:21px 19px;min-height:0}.workspace .page-head h1{font-size:27px}.workspace .page-head p{font-size:12px}.workspace .report-actions{padding:12px}.workspace .agenda{padding:16px}.workspace .tax-net{margin:6px -20px -20px;padding:20px}.workspace .period-select{padding:16px}.workspace .period-select .field{margin-bottom:4px}.workspace .standalone{padding:16px}}
