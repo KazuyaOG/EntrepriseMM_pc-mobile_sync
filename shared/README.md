@@ -16,11 +16,29 @@ shared/
 ├── server/
 │   ├── server.js       serveur WebSocket + fichiers statiques
 │   └── cli.js          lancement en ligne de commande (mm-sync)
-└── test/
-    ├── merge.test.js   fusion : conflits, suppressions, convergence
-    ├── server.test.js  serveur : diffusion, persistance, santé
-    └── client.test.js  deux applications complètes qui se synchronisent
+└── test/                37 tests (npm test)
+    ├── merge.test.js    fusion : conflits, suppressions, convergence
+    ├── protocol.test.js adresses, salles, noms d'appareil, ports
+    ├── server.test.js   serveur : diffusion, persistance, santé
+    ├── client.test.js   deux applications complètes qui se synchronisent,
+    │                    dont une coupure réseau suivie d'une reconnexion
+    └── app.test.js      compatibilité avec la logique métier existante
 ```
+
+## Configurer la synchronisation
+
+Dans les deux applications : **Réglages → Synchronisation PC ↔ mobile**.
+
+| Réglage | Rôle |
+| --- | --- |
+| Adresse du PC | `192.168.0.20:8765`, ou l'adresse complète `ws://…/sync` |
+| Nom de cet appareil | affiché dans le journal du serveur (« Ordinateur », « Téléphone ») |
+| Salle de synchronisation | isole plusieurs groupes ; identique sur les deux appareils |
+| Synchroniser automatiquement | active/désactive la connexion |
+
+L'identifiant d'appareil est créé une fois puis conservé : le serveur reconnaît
+le même appareil d'une session à l'autre. La configuration est enregistrée au
+premier lancement, même si la synchronisation est désactivée.
 
 ## Modèle de données
 
@@ -32,6 +50,7 @@ techniques, invisibles dans l’interface :
 | `enregistrement.updatedAt` | horodatage de la dernière modification de la fiche |
 | `data.meta.<champ>` | horodatage de `company`, `settings` et `notes` |
 | `data.tombstones` | suppressions mémorisées (`clients\|0042` → horodatage) |
+| `data.meta` | horodatages des champs uniques (`company`, `settings`, `notes`) |
 
 Une copie sans ces champs reste parfaitement lisible : ils sont ajoutés à la
 première modification. C’est ce qui rend la fonction rétrocompatible avec les
@@ -111,6 +130,23 @@ dans :
 - macOS : `~/Library/Application Support/Gestion MM/sync`
 - Linux : `~/.local/share/gestion-mm/sync`
 - variable `MM_SYNC_DIR` pour forcer un autre dossier
+
+## Première synchronisation
+
+Les données déjà présentes sur un appareil n'ont pas d'horodatage. Au premier
+envoi, le client les estampille (`stampChanges({}, données)`) : sans cela, le
+serveur ne pourrait pas arbitrer entre deux versions et les champs uniques
+(entreprise, réglages) seraient ignorés.
+
+Cas traités :
+
+- **Appareil neuf, aucune donnée locale** : il adopte l'état du PC tel quel.
+- **Appareil neuf avec le jeu de démonstration intact** : il l'adopte aussi
+  (les fiches fictives ne polluent pas les vraies données). L'application le
+  détecte avec `isDemoData()`.
+- **Appareil déjà utilisé** : ses fiches sont fusionnées avec celles du PC,
+  rien n'est perdu, et l'utilisateur peut effacer les exemples d'un bouton
+  (`resetToBlank()`).
 
 ## Ajouter la synchronisation à un nouvel écran
 

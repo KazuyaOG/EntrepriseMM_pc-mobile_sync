@@ -31,9 +31,9 @@ office de serveur ; le téléphone s’y connecte.
        disque du PC : copie de sécurité de l'état partagé
 ```
 
-1. **Sur le PC**, démarrez l’application (ou `npm run sync`). Le serveur écoute
-   sur le port **8765** et affiche l’adresse à utiliser, par exemple
-   `ws://192.168.0.20:8765/sync`.
+1. **Sur le PC**, démarrez l’application Windows (le serveur démarre tout seul)
+   ou, pour le serveur seul, `npm run sync`. Il écoute sur le port **8765** et
+   affiche l’adresse à utiliser, par exemple `ws://192.168.0.20:8765/sync`.
 2. **Sur l’iPhone**, ouvrez l’application → **Réglages** → **Synchronisation
    PC ↔ mobile**, entrez `192.168.0.20:8765`, puis **Enregistrer et connecter**.
 3. Les deux écrans passent à **« Synchronisé »**. Toute modification faite d’un
@@ -41,6 +41,12 @@ office de serveur ; le téléphone s’y connecte.
 
 Le même panneau existe sur le PC (Réglages → Synchronisation), avec l’adresse
 déjà remplie.
+
+> **Premier lancement.** Dans l’application Windows et sur iPhone, la
+> synchronisation est déjà active : il ne reste qu’à saisir l’adresse. Dans un
+> simple `npm run dev` (version web de développement), elle est inactive et
+> s’active d’un clic, pour ne pas afficher « hors ligne » avant qu’un serveur
+> existe.
 
 ### Ce qui est synchronisé
 
@@ -122,9 +128,24 @@ qui restent maîtres de leurs données.
 ## Tests
 
 ```sh
-cd shared && npm test          # 20 tests : fusion, serveur, aller-retour client
+cd shared && npm test              # 37 tests : fusion, protocole, serveur, aller-retour
 cd pc_desktop && npm run test:ui   # tests d’interface (Playwright, application lancée)
 ```
+
+## Repartir de données réelles
+
+Les applications sont livrées avec des clients, factures et rendez-vous
+**fictifs** pour la démonstration. Avant un usage réel, deux options :
+
+- **Repartir à zéro** : Réglages → Synchronisation → **Effacer les exemples**.
+  La fiche d’entreprise est conservée, les fiches fictives sont supprimées (et
+  la suppression se propage à l’autre appareil).
+- **Tout effacer** : Réglages → *Stockage* du navigateur / réinstallation pour
+  l’application Windows, ou suppression de l’application sur l’iPhone.
+
+Un avertissement apparaît dans les réglages tant que des données de
+démonstration sont présentes : elles seraient sinon synchronisées comme de
+vraies fiches.
 
 ## Confidentialité
 
