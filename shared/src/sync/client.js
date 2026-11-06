@@ -129,6 +129,7 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
   let applying = false;
   let lastLocal = typeof getData === 'function' ? getData() : null;
   let lastSentSignature = '';
+  let flushTimer = null;
 
   const emit = () => { for (const listener of listeners) listener(state); };
   const setState = patch => {
@@ -188,7 +189,6 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
     return stamped;
   }
 
-  let flushTimer = null;
   function scheduleFlush() {
     if (!socket || socket.readyState !== 1) return;
     if (inFlight) return;
@@ -329,6 +329,8 @@ export function createSyncSession({ getData, apply, isPristine = () => false } =
     closedByUser = true;
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
+    clearTimeout(flushTimer);
+    flushTimer = null;
     closeSocket();
     burst = 0;
     setState({ status: 'off', label: 'Synchronisation désactivée', peers: 0 });

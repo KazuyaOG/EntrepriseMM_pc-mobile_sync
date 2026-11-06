@@ -41,14 +41,20 @@ export function defaultServerUrl(port = DEFAULT_PORT) {
 export function normalizeServerUrl(input, port = DEFAULT_PORT) {
   const raw = String(input || '').trim();
   if (!raw) return '';
+  // Une URL complète doit utiliser http(s) ou ws(s) ; une simple adresse
+  // (« 192.168.0.20:8765 ») est acceptée et convertie en ws://.
+  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw);
   let candidate = raw;
-  if (!/^wss?:\/\//i.test(candidate)) candidate = /^https?:\/\//i.test(candidate)
-    ? candidate.replace(/^http/i, 'ws')
-    : 'ws://' + candidate;
+  if (!hasScheme) candidate = 'ws://' + raw;
+  else if (/^https?:\/\//i.test(candidate)) candidate = candidate.replace(/^http/i, 'ws');
+  else if (!/^wss?:\/\//i.test(candidate)) return '';
   let url;
   try { url = new URL(candidate); } catch { return ''; }
   if (!/^wss?:$/.test(url.protocol)) return '';
-  if (!url.port) url.port = String(port);
+  if (!url.hostname) return '';
+  // Un port explicite (y compris celui de l'URL d'origine) est conservé ;
+  // sinon on applique le port demandé (8765 par défaut).
+  if (!url.port && !/^wss?:\/\/[^/]*:\d/.test(candidate)) url.port = String(port);
   url.pathname = '/sync';
   url.search = '';
   url.hash = '';
