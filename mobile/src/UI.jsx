@@ -1,0 +1,7 @@
+import{createPortal}from'react-dom';
+import React from'react';import{X}from'lucide-react';
+export function Logo({small=false}){return <div className={'logo '+(small?'small':'')}><svg viewBox="0 0 110 60" fill="none" aria-label="Monogramme MM provisoire"><path d="M8 48V12L30 36 51 12V48M59 48V12L80 36 102 12V48" stroke="currentColor" strokeWidth="4" strokeLinejoin="round"/><path d="M8 56H102" stroke="currentColor"/></svg>{!small&&<><b>ENTRETIEN</b><span>MICHEL MAISONNEUVE</span></>}</div>}
+export function Modal({title,children,onClose,wide}){return createPortal(<div className="overlay" onMouseDown={e=>e.target===e.currentTarget&&onClose()}><section role="dialog" aria-modal="true" aria-label={title} className={'modal '+(wide?'wide':'')}><header><h2>{title}</h2><button className="icon-btn" aria-label="Fermer" onClick={onClose}><X size={20}/></button></header>{children}</section></div>,document.body)}
+export function Field({label,children,...props}){return <label className="field"><span>{label}</span>{children?React.cloneElement(children,{'aria-label':children.props['aria-label']||label}):<input aria-label={label} {...props}/>}</label>}
+export function PageHead({eyebrow,title,description,action}){return <div className="page-head"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action}</div>}
+export function SearchBox({value,onChange,placeholder}){return <div className="search"><span>⌕</span><input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder}/></div>}

@@ -1,0 +1,25 @@
+.launch-screen{position:fixed;inset:0;z-index:500;background:#183d32;color:#eaf0df;overflow:hidden;display:grid;place-items:center;animation:launch-exit .55s cubic-bezier(.65,0,.35,1) 1.85s both}
+.launch-grain{position:absolute;inset:0;opacity:.5;background:radial-gradient(ellipse at 50% 48%,#46684a60,transparent 65%),linear-gradient(130deg,#ffffff03,transparent 55%);pointer-events:none}
+.launch-orbit{position:absolute;width:650px;height:650px;border:1px solid #c7d5ab0c;border-radius:50%;pointer-events:none;animation:orbit-arrive 2.4s ease-out both}
+.orbit-two{width:830px;height:830px;border-color:#c7d5ab08;animation-delay:.12s}
+.launch-center{position:relative;text-align:center;transform:translateY(-12px)}
+.launch-center .logo{color:#dce6c9;margin:0 auto;width:270px}
+.launch-center .logo svg{width:146px;height:85px;overflow:visible;filter:drop-shadow(0 8px 22px #0c261d25)}
+.launch-center .logo svg path{stroke-dasharray:300;stroke-dashoffset:300;animation:logo-draw 1.15s cubic-bezier(.25,.46,.45,.94) .12s forwards}
+.launch-center .logo svg path:nth-child(2){animation-delay:.4s;stroke-dasharray:110;stroke-dashoffset:110}
+.launch-center .logo b{font-size:9px;letter-spacing:6px;margin-top:20px;animation:launch-reveal .65s ease-out .55s both}
+.launch-center .logo>span{font-size:13px;letter-spacing:2.8px;margin-top:10px;animation:launch-reveal .65s ease-out .7s both}
+.launch-rule{width:1px;height:35px;background:linear-gradient(transparent,#aebf8e80);margin:0 auto 30px;animation:launch-reveal .6s ease-out both}
+.launch-tagline{font-size:12px;letter-spacing:.6px;color:#bccbb0;margin:26px 0 0;animation:launch-reveal .7s ease-out .9s both}
+.launch-progress{width:74px;height:2px;background:#d7e4bf15;margin:30px auto 0;overflow:hidden;animation:launch-reveal .4s ease-out .85s both}
+.launch-progress span{display:block;background:#b3c793;width:100%;height:100%;transform-origin:left;animation:progress-fill 1s ease-in-out .85s both}
+.launch-location{position:absolute;bottom:34px;font-size:8px;letter-spacing:2.4px;color:#a8ba9990;animation:launch-reveal .8s ease-out .4s both}
+.launch-skip{position:absolute;right:30px;bottom:26px;background:transparent;border:1px solid #c6d4b028;color:#c3cfb6;font-size:11px;border-radius:7px;padding:9px 13px;display:flex;gap:14px;align-items:center;animation:launch-reveal .5s ease-out .25s both}
+.launch-skip:hover{background:#ffffff08;border-color:#c6d4b060}
+@keyframes logo-draw{to{stroke-dashoffset:0}}
+@keyframes launch-reveal{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes progress-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orbit-arrive{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1.03)}}
+@keyframes launch-exit{0%{opacity:1;visibility:visible;transform:scale(1)}100%{opacity:0;visibility:hidden;transform:scale(1.035)}}
+@media(prefers-reduced-motion:reduce){.launch-screen{display:none}.launch-screen *{animation:none!important}}
+@media(max-width:600px){.launch-orbit{width:390px;height:390px}.orbit-two{width:550px;height:550px}.launch-location{bottom:85px;font-size:7px;letter-spacing:1.6px}.launch-skip{right:20px;bottom:23px}.launch-center .logo svg{width:128px;height:75px}}

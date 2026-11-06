@@ -1,0 +1,42 @@
+.usb-settings { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 20px; }
+.usb-settings h3 { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.usb-settings > .muted { font-size: 12px; margin-bottom: 14px; }
+.usb-settings > button { margin-top: 9px; justify-content: center; }
+.usb-settings-note { font-size: 10px; line-height: 1.7; color: #7d8973; margin: 12px 0 18px; }
+.usb-dialog > h3 { font-size: 19px; margin: 16px 0 10px; }
+.usb-dialog > p { font-size: 13px; }
+.usb-dialog > button { margin-top: 10px; justify-content: center; }
+.usb-hero { width: 82px; height: 82px; display: flex; align-items: center; justify-content: center; margin: 4px auto 22px; border-radius: 24px; background: #eef3e8; color: #52734b; }
+.usb-hero.success { background: #e7f2e9; color: #34734c; }
+.usb-status { text-align: center; padding: 28px 8px; color: #647b58; }
+.usb-status h3 { margin: 17px 0 8px; }
+.usb-status p { font-size: 12px; margin: 0; }
+.usb-spin { animation: usb-spin 1.4s linear infinite; }
+@keyframes usb-spin { to { transform: rotate(360deg); } }
+.usb-message { display: flex; align-items: flex-start; gap: 12px; padding: 16px; margin: 14px 0; border: 1px solid #dce6d3; border-radius: 9px; background: #f3f7ee; color: #53684a; }
+.usb-message > svg { flex-shrink: 0; margin-top: 2px; }
+.usb-message p { font-size: 12px; margin: 0 0 8px; }
+.usb-message p:last-child { margin-bottom: 0; }
+.usb-message h3 { font-size: 15px; margin-bottom: 9px; }
+.usb-message.error { background: #fff2ee; border-color: #efd3c9; color: #934b37; }
+.usb-message.warning { background: #fbf6e8; border-color: #e9dbb5; color: #80632e; }
+.usb-selected { display: flex; align-items: center; gap: 12px; padding: 15px; background: #f2f6ed; border: 1px solid #dfe8d6; border-radius: 9px; margin-bottom: 20px; }
+.usb-selected > div { flex: 1; min-width: 0; }
+.usb-selected b, .usb-selected small { display: block; overflow-wrap: anywhere; }
+.usb-selected b { font-size: 13px; }
+.usb-selected small { font-size: 11px; color: #7c8d70; margin-top: 4px; }
+.usb-choices { border: 0; padding: 0; margin: 0 0 14px; min-width: 0; }
+.usb-choices legend { font-size: 13px; font-weight: 600; margin-bottom: 12px; padding: 0; }
+.usb-choice { display: flex; align-items: center; gap: 11px; border: 1px solid #e0e6d9; border-radius: 8px; padding: 14px 12px; margin-bottom: 8px; cursor: pointer; background: #fcfdfb; }
+.usb-choice.selected { border-color: #86a276; background: #f1f6eb; }
+.usb-choice input { flex: 0 0 17px; width: 17px; height: 17px; margin: 0; }
+.usb-choice > svg { flex-shrink: 0; }
+.usb-choice > span { min-width: 0; }
+.usb-choice b, .usb-choice small { display: block; overflow-wrap: anywhere; }
+.usb-choice b { font-size: 12px; font-weight: 600; }
+.usb-choice small { font-size: 10px; color: #7d8b72; margin-top: 5px; line-height: 1.5; }
+.usb-choice.file { align-items: flex-start; }
+.usb-choice.file input { margin-top: 2px; }
+.usb-filename { background: #f4f6f0; padding: 12px; border-radius: 7px; overflow-wrap: anywhere; font-size: 12px !important; }
+@media (prefers-reduced-motion: reduce) { .usb-spin { animation: none; } }
+@media (max-width: 760px) { .usb-dialog > h3 { font-size: 17px; } .usb-choice { padding: 12px 10px; gap: 8px; } }

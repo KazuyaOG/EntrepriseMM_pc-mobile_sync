@@ -1,0 +1,9 @@
+{
+  "appId": "ca.entretienmm.mobile",
+  "appName": "Gestion MM",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "iosScheme": "https"
+  }
+}
