@@ -11,7 +11,32 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { WebSocketServer } from 'ws';
+// `ws` est une dépendance du serveur. Dans l'application PC empaquetée, les
+// dépendances se trouvent dans resources/app.asar/node_modules et le moteur
+// partagé est copié dans resources/shared : resolveShared() reçoit donc le
+// dossier de l'application pour retrouver `ws`, avec repli sur la résolution
+// Node habituelle (développement, CLI autonome).
+async function loadWebSocketServer(resolveFrom) {
+  const attempts = [];
+  if (resolveFrom) {
+    try {
+      const { createRequire } = await import('node:module');
+      attempts.push(createRequire(path.join(resolveFrom, 'noop.js')).resolve('ws'));
+    } catch { /* repli ci-dessous */ }
+  }
+  attempts.push('ws');
+  for (const attempt of attempts) {
+    try {
+      const module = await import(attempt);
+      if (module.WebSocketServer) return module.WebSocketServer;
+      if (module.default?.WebSocketServer) return module.default.WebSocketServer;
+    } catch { /* essai suivant */ }
+  }
+  throw Object.assign(
+    new Error('Le module « ws » est requis pour la synchronisation. Lancez npm install dans pc_desktop.'),
+    { code: 'MISSING_WS' }
+  );
+}
 import { mergeData } from '../src/sync/merge.js';
 import {
   PROTOCOL_VERSION,
@@ -82,6 +107,9 @@ async function readBody(req, limit) {
  * @param {(line: string) => void} [options.log]
  */
 export async function startSyncServer(options = {}) {
+  if (!startSyncServer.WebSocketServer) {
+    startSyncServer.WebSocketServer = await loadWebSocketServer(options.resolveFrom || '');
+  }
   const requested = options.port === undefined ? DEFAULT_PORT : Number(options.port);
   // Le port 0 laisse le système choisir (utile pour les tests).
   if (requested !== 0 && !validPort(requested)) throw Object.assign(new Error(`Port invalide : ${options.port}`), { code: 'BAD_PORT' });
@@ -263,7 +291,7 @@ export async function startSyncServer(options = {}) {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Introuvable');
   });
 
-  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE_BYTES });
+  const wss = new startSyncServer.WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE_BYTES });
 
   server.on('upgrade', async (req, socket, head) => {
     const url = new URL(req.url || '/', 'http://localhost');

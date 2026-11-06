@@ -17,7 +17,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "lucide-react": "^0.468.0",
-    "jspdf": "^2.5.2"
+    "jspdf": "^2.5.2",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "vite": "^6.0.0",
@@ -33,11 +34,28 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "shared/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../shared",
+        "to": "shared",
+        "filter": [
+          "server/**/*",
+          "src/**/*",
+          "package.json",
+          "!**/node_modules/**",
+          "!test/**/*"
+        ]
+      }
     ],
     "win": {
       "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
     }
   }
 }
